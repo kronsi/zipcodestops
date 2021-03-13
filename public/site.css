@@ -1,0 +1,25 @@
+html, body, #app, #app>div, #root, .App, .App>div {
+    height: 100%
+}
+
+.map-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    height: 100%;
+}
+     
+.sidebar {
+    background-color: rgba(35, 55, 75, 0.9);
+    color: #ffffff;
+    padding: 6px 12px;
+    font: 15px/24px monospace;
+    z-index: 1;
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 12px;
+    border-radius: 4px;
+}
