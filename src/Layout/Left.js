@@ -29,7 +29,7 @@ class Left extends React.Component {
         this.state = {
             lng: 13.401797,
             lat: 52.518898,
-            zoom: 9,
+            zoom: 11,
             mapload: false,
             zipcode: "",
             polygon: [],
@@ -92,7 +92,10 @@ class Left extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        console.log("nextProps", nextProps);
+        
+        const layerId = "zipcode";
+        const sourceId = "zipcodeSrc";
+
         if( nextProps.showZipcode && nextProps.showZipcode.length > 0 && nextProps.showZipcode != this.state.zipcode ){
             this.setState({
                 zipcode: nextProps.showZipcode
@@ -118,10 +121,18 @@ class Left extends React.Component {
                     'type': 'geojson',
                     'data': polygon
                 });
+                var center = turf.center(polygon);
+                console.log("center", center);
                 this.setState({
-                    polygon: polygon
+                    polygon: polygon                    
                 })
-
+                this.map.flyTo({
+                    center: [
+                        center.geometry.coordinates[0],
+                        center.geometry.coordinates[1]
+                    ],
+                    essential: true // this animation is considered essential with respect to prefers-reduced-motion
+                });
                 this.map.addLayer({
                     'id': layerId,
                     'type': 'fill',
@@ -135,6 +146,19 @@ class Left extends React.Component {
             });
         }
 
+        if( nextProps.showZipcode == "" ){
+            
+
+            if (this.map.getLayer(layerId)) {
+                this.map.removeLayer(layerId);
+            }
+            if (this.map.getSource(sourceId)) {
+                this.map.removeSource(sourceId);
+            }
+            this.setState({
+                zipcode: ""
+            });
+        }
     }
 
     render() {

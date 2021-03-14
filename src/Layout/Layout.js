@@ -31,7 +31,7 @@ class Layout extends React.Component {
     }
 
     onZipChange = (e) => {
-        if( e.target.value && e.target.value.length == 5 ){            
+        if( e.target.value && e.target.value.length == 5 ){
             this.setState({
                 zipcode: e.target.value
             })
@@ -50,6 +50,13 @@ class Layout extends React.Component {
         }
     }
 
+    onClear = (e) => {
+        this.setState({
+            zipcode: "",
+            latLngList: [],
+        })
+    }
+
     render(){
         const { classes } = this.props;
         const { zipcode, latLngList } = this.state;
@@ -58,7 +65,7 @@ class Layout extends React.Component {
             <div className={classes.root}>
                 <Grid className={classes.containerWrapper} container spacing={1}>        
                     <Left showZipcode={zipcode} addToLatLngList={this.addToLatLngList} />
-                    <Right onZipChange={this.onZipChange} showLatLngList={latLngList} />     
+                    <Right onZipChange={this.onZipChange} showLatLngList={latLngList} onClear={this.onClear} />     
                 </Grid>    
             </div>
         );
