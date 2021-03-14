@@ -64,8 +64,8 @@ class Layout extends React.Component {
         return (
             <div className={classes.root}>
                 <Grid className={classes.containerWrapper} container spacing={1}>        
-                    <Left showZipcode={zipcode} addToLatLngList={this.addToLatLngList} />
-                    <Right onZipChange={this.onZipChange} showLatLngList={latLngList} onClear={this.onClear} />     
+                    <Left showZipcode={zipcode} addToLatLngList={this.addToLatLngList} onClear={this.onClear} />
+                    <Right onZipChange={this.onZipChange} showLatLngList={latLngList} onClear={this.onClear} />
                 </Grid>    
             </div>
         );

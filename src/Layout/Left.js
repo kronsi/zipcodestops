@@ -26,6 +26,7 @@ const useStyles = theme => ({
 class Left extends React.Component {
     constructor(props) {
         super(props);
+        this.marker = [];
         this.state = {
             lng: 13.401797,
             lat: 52.518898,
@@ -69,10 +70,11 @@ class Left extends React.Component {
                 const point = turf.point([e.lngLat.lng, e.lngLat.lat]);
                 const isIn = turf.booleanContains(polygon, point);
                 if(isIn){
-                    new mapboxgl.Marker()
+                    const marker = new mapboxgl.Marker()
                     .setLngLat([e.lngLat.lng, e.lngLat.lat])            
                     .addTo(this.map);
-                    
+                    this.marker.push(marker);
+
                     if(this.props.addToLatLngList ){                    
                         this.props.addToLatLngList(e);                    
                     }
@@ -97,6 +99,7 @@ class Left extends React.Component {
         const sourceId = "zipcodeSrc";
 
         if( nextProps.showZipcode && nextProps.showZipcode.length > 0 && nextProps.showZipcode != this.state.zipcode ){
+            const { onClear } = this.props;
             this.setState({
                 zipcode: nextProps.showZipcode
             });
@@ -158,6 +161,11 @@ class Left extends React.Component {
             this.setState({
                 zipcode: ""
             });
+
+            for (let i = 0; i < this.marker.length; i++) {
+                this.marker[i].remove();
+            }
+            this.marker = [];
         }
     }
 
