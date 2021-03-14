@@ -56,7 +56,8 @@ class Right extends React.Component {
         for(let i = 0; i < showLatLngList.length; i++){
             textToCopy += zipcode + "\t" + showLatLngList[i].lat + "\t" + showLatLngList[i].lng + "\n";
         }
-        navigator.clipboard.writeText(textToCopy)
+        console.log("textToCopy", textToCopy);
+        navigator.clipboard.writeText(textToCopy);
     }
 
     onClear = (e) => {
