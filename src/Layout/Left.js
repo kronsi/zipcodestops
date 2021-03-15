@@ -70,13 +70,31 @@ class Left extends React.Component {
                 const point = turf.point([e.lngLat.lng, e.lngLat.lat]);
                 const isIn = turf.booleanContains(polygon, point);
                 if(isIn){
-                    const marker = new mapboxgl.Marker()
-                    .setLngLat([e.lngLat.lng, e.lngLat.lat])            
+                    // create the popup
+                    const popup = new mapboxgl.Popup({ offset: 25 }).setText(
+                    'Construction on the Washington Monument began in 1848.'
+                    );
+                    const markerId = (this.marker.length == 0 ? 1 : this.marker[this.marker.length - 1].id +1);
+                    // create DOM element for the marker
+                    let el = document.createElement('div');
+                    el.className = 'marker';
+                    el.innerHTML = '<span><b>' + (markerId) + '</b></span>';
+
+                    const marker = new mapboxgl.Marker(el)
+                    .setLngLat([e.lngLat.lng, e.lngLat.lat])                    
                     .addTo(this.map);
-                    this.marker.push(marker);
+                    /*
+                    setTimeout(() => {
+                        marker.remove();
+                    }, 3000)                    
+                    */
+                    this.marker.push({
+                        id: markerId,
+                        item: marker
+                    });
 
                     if(this.props.addToLatLngList ){                    
-                        this.props.addToLatLngList(e);                    
+                        this.props.addToLatLngList(this.marker);                    
                     }
                 }
             }
@@ -97,7 +115,7 @@ class Left extends React.Component {
         
         const layerId = "zipcode";
         const sourceId = "zipcodeSrc";
-
+        //console.log("nextProps", nextProps);
         if( nextProps.showZipcode && nextProps.showZipcode.length > 0 && nextProps.showZipcode != this.state.zipcode ){
             const { onClear } = this.props;
             this.setState({
@@ -105,7 +123,7 @@ class Left extends React.Component {
             });
             //const zipJson = fs.readFileSync(`../Map/zipcode-geojson/${nextProps.showZipcode}.json`);
             const url = process.env.PUBLIC_URL + 'zipcode-geojson/' +nextProps.showZipcode + ".json";
-            console.log("zipJson", url);
+            //console.log("zipJson", url);
             axios.get(url).then(resp => {
 
                 const layerId = "zipcode";
@@ -125,7 +143,7 @@ class Left extends React.Component {
                     'data': polygon
                 });
                 var center = turf.center(polygon);
-                console.log("center", center);
+                //console.log("center", center);
                 this.setState({
                     polygon: polygon                    
                 })
@@ -163,9 +181,20 @@ class Left extends React.Component {
             });
 
             for (let i = 0; i < this.marker.length; i++) {
-                this.marker[i].remove();
+                this.marker[i].item.remove();
             }
             this.marker = [];
+        }
+
+        if( nextProps.markerList.length != this.marker.length ){
+            const {markerList} = nextProps;
+            for(let i=0; i < this.marker.length; i++){
+                let isItem =markerList.find((mItem => mItem.id == this.marker[i].id));
+                if(!isItem){
+                    this.marker[i].item.remove();
+                }
+            }
+            this.marker = markerList;
         }
     }
 

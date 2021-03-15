@@ -13,6 +13,7 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Button from '@material-ui/core/Button';
+import DeleteIcon from '@material-ui/icons/Delete';
 
 
 const useStyles = theme => ({
@@ -50,13 +51,13 @@ class Right extends React.Component {
     }
 
     onCopy = (e) => {
-        let textToCopy = "ZipCode\tLat\tLng\n";
+        let textToCopy = "Id\tZipCode\tLat\tLng\n";
         const { zipcode } = this.state;
         const {showLatLngList} = this.props;
         for(let i = 0; i < showLatLngList.length; i++){
-            textToCopy += zipcode + "\t" + showLatLngList[i].lat + "\t" + showLatLngList[i].lng + "\n";
+            textToCopy += showLatLngList[i].id + "\t" + zipcode + "\t" + showLatLngList[i].item._lngLat.lat + "\t" + showLatLngList[i].item._lngLat.lng + "\n";
         }
-        console.log("textToCopy", textToCopy);
+        //console.log("textToCopy", textToCopy);
         //navigator.clipboard.writeText(textToCopy);
         this.copyToClipboard(textToCopy);
     }
@@ -92,6 +93,11 @@ class Right extends React.Component {
         const {onClear} = this.props;
         onClear(e);
     }
+
+    onDeleteClick = (e) => {        
+        const {onMarkerDeleteClicked} = this.props;
+        onMarkerDeleteClicked(e.target.innerText);
+    }
     
 
     render() {
@@ -100,13 +106,18 @@ class Right extends React.Component {
         const { zipcode } = this.state;
         
         let listItems = [];
+
+        
         for(let i = 0; i < showLatLngList.length; i++){
             listItems.push(
-                <TableRow key={i}>                    
+                <TableRow key={i}>
+                    <TableCell align="left">
+                        <Button key={"buttonId" + i} variant="contained" color="secondary" startIcon={<DeleteIcon />} onClick={this.onDeleteClick} >{showLatLngList[i].id}</Button>
+                    </TableCell>
                     <TableCell align="left">{zipcode}</TableCell>
-                    <TableCell align="left">{showLatLngList[i].lat}</TableCell>
-                    <TableCell align="left">{showLatLngList[i].lng}</TableCell>
-                    <TableCell align="right"></TableCell>
+                    <TableCell align="left">{showLatLngList[i].item._lngLat.lat}</TableCell>
+                    <TableCell align="left">{showLatLngList[i].item._lngLat.lng}</TableCell>
+                    <TableCell></TableCell>               
                 </TableRow>
             );
         }
@@ -114,41 +125,43 @@ class Right extends React.Component {
         return (    
             <Grid item xs={3}>
                 <form className={classes.form} noValidate autoComplete="off">                                                        
-                    <Grid container spacing={3}>                        
+                    <Grid container spacing={3}>                    
                         <Grid item xs={4}>
                             <TextField id="standard-basic" label="Standard" onChange={this.onZipChange} />  
                         </Grid>
                         <Grid item xs={4}>
                             <Button variant="contained" onClick={this.onCopy}>
-                                Copy                                
+                                Copy                                                             
                             </Button> 
                         </Grid>          
                         <Grid item xs={4}>
                             <Button variant="contained" onClick={this.onClear}>
                                 Clear                                
                             </Button> 
-                        </Grid>  
+                        </Grid>                                                
                     </Grid>                      
                 </form>
                 <TableContainer  className={classes.container} component={Paper}>
-                <Table stickyHeader aria-label="simple table">
-                    <TableHead>
-                    <TableRow>                        
-                        <TableCell>
-                            ZipCode                            
-                        </TableCell>
-                        <TableCell align="left">Lat</TableCell>
-                        <TableCell align="left">Lng</TableCell>
-                        <TableCell>
-                            <Badge badgeContent={showLatLngList.length} color="primary"></Badge>
-                        </TableCell>                     
-                    </TableRow>
-                    </TableHead>
-                    <TableBody>                    
-                        {listItems}                    
-                    </TableBody>
-                </Table>
-                </TableContainer>                            
+                    <Table stickyHeader aria-label="simple table">
+                        <TableHead>
+                        <TableRow>                        
+                            <TableCell width="15px">Id</TableCell>
+                            <TableCell width="15px">Zip</TableCell>
+                            <TableCell align="left">Lat</TableCell>
+                            <TableCell align="left">Lng</TableCell>
+                            <TableCell>
+                                <Badge badgeContent={showLatLngList.length} color="primary"></Badge>
+                            </TableCell>                     
+                        </TableRow>
+                        </TableHead>
+                        <TableBody>                    
+                            {listItems}                    
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+                <Grid item xs={12}>
+                    <Badge badgeContent={showLatLngList.length} color="primary"></Badge>
+                </Grid>                            
             </Grid>  
         );
     }

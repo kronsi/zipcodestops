@@ -3,6 +3,7 @@ import React from 'react';
 import Grid from '@material-ui/core/Grid';
 import Left from './Left';
 import Right from './Right';
+import { containsNumber } from '@turf/turf';
 
 const useStyles = theme => ({
   root: {
@@ -25,7 +26,7 @@ class Layout extends React.Component {
         super(props);
         this.state = {
             zipcode: "",
-            latLngList: [],           
+            markerList: [],           
         };
         
     }
@@ -38,34 +39,49 @@ class Layout extends React.Component {
         }
     }
 
-    addToLatLngList = (e) => {
-        if( e.lngLat ){
-            let {latLngList} = this.state;
-            console.log("e.lngLat", e.lngLat)
-            latLngList.push(e.lngLat);
-            
+    addToLatLngList = (markerList) => {
+        //console.log("markerList", markerList);
+        
+        if( markerList.length ){            
             this.setState({
-                latLngList: latLngList
+                markerList: markerList
             })
         }
+        
     }
 
     onClear = (e) => {
         this.setState({
             zipcode: "",
-            latLngList: [],
+            markerList: [],
+        })
+    }
+
+    onMarkerDeleteClicked = (id) => {
+        const {markerList} = this.state;
+        let newMarkerList = [];
+        
+        for(let i=0; i < markerList.length; i++){            
+            if( markerList[i].id != id ){
+                newMarkerList.push(markerList[i]);
+            }
+        }
+        
+        
+        this.setState({
+            markerList: newMarkerList
         })
     }
 
     render(){
         const { classes } = this.props;
-        const { zipcode, latLngList } = this.state;
-        console.log(classes);
+        const { zipcode, markerList } = this.state;
+        
         return (
             <div className={classes.root}>
                 <Grid className={classes.containerWrapper} container spacing={1}>        
-                    <Left showZipcode={zipcode} addToLatLngList={this.addToLatLngList} onClear={this.onClear} />
-                    <Right onZipChange={this.onZipChange} showLatLngList={latLngList} onClear={this.onClear} />
+                    <Left showZipcode={zipcode} addToLatLngList={this.addToLatLngList} onClear={this.onClear} markerList={markerList} />
+                    <Right onZipChange={this.onZipChange} showLatLngList={markerList} onClear={this.onClear} onMarkerDeleteClicked={this.onMarkerDeleteClicked} />
                 </Grid>    
             </div>
         );

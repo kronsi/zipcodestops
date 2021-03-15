@@ -23,3 +23,34 @@ html, body, #app, #app>div, #root, .App, .App>div {
     margin: 12px;
     border-radius: 4px;
 }
+
+.marker {width:0; height:0;}
+
+.marker  span {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  box-sizing:border-box;
+  width: 30px;
+  height: 30px;
+  color:#fff;
+  background: #693;
+  border:solid 2px;
+  border-radius: 0 70% 70%;
+  box-shadow:0 0 2px #000;
+  cursor: pointer;
+  transform-origin:0 0;
+  transform: rotateZ(-135deg);
+}
+
+.marker b {transform: rotateZ(135deg)}
+
+.mapboxgl-popup {
+  max-width: 200px;
+}
+
+.mapboxgl-popup-content {
+  text-align: center;
+  font-family: 'Open Sans', sans-serif;
+}
+
