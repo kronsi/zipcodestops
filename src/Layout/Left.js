@@ -33,7 +33,10 @@ class Left extends React.Component {
             zoom: 11,
             mapload: false,
             zipcode: "",
+            zipcodeList: [],
             polygon: [],
+            coordinates: {},
+            distance: 0.0,
         };
         this.mapContainer = React.createRef();
         this.map = null;
@@ -65,15 +68,27 @@ class Left extends React.Component {
         });
 
         this.map.on('click', (e) => {
-            const {polygon} = this.state;
-            if( polygon && polygon.geometry ){
+            const {coordinates} = this.state;
+            
+            if( coordinates && Object.keys(coordinates).length > 0 ){
+                
                 const point = turf.point([e.lngLat.lng, e.lngLat.lat]);
-                const isIn = turf.booleanContains(polygon, point);
+                let isIn = false;
+                for(let zip in coordinates){
+                    var tempFeature = {
+                        "type": "Polygon",
+                        "coordinates": [coordinates[zip]]
+                    };
+                    
+                    let feature = turf.feature(tempFeature)
+                    isIn = turf.booleanContains(feature, point);                    
+                    if(isIn){
+                        break;
+                    }
+                }
+
                 if(isIn){
-                    // create the popup
-                    const popup = new mapboxgl.Popup({ offset: 25 }).setText(
-                    'Construction on the Washington Monument began in 1848.'
-                    );
+                 
                     const markerId = (this.marker.length == 0 ? 1 : this.marker[this.marker.length - 1].id +1);
                     // create DOM element for the marker
                     let el = document.createElement('div');
@@ -82,12 +97,7 @@ class Left extends React.Component {
 
                     const marker = new mapboxgl.Marker(el)
                     .setLngLat([e.lngLat.lng, e.lngLat.lat])                    
-                    .addTo(this.map);
-                    /*
-                    setTimeout(() => {
-                        marker.remove();
-                    }, 3000)                    
-                    */
+                    .addTo(this.map);                    
                     this.marker.push({
                         id: markerId,
                         item: marker
@@ -96,12 +106,14 @@ class Left extends React.Component {
                     if(this.props.addToLatLngList ){                    
                         this.props.addToLatLngList(this.marker);                    
                     }
+            
                 }
+            
             }
             else {
                 alert("zipcode is missing");
             }
-           
+            
         });
 
         
@@ -116,18 +128,20 @@ class Left extends React.Component {
         const layerId = "zipcode";
         const sourceId = "zipcodeSrc";
         //console.log("nextProps", nextProps);
+        //zipcodeList
         if( nextProps.showZipcode && nextProps.showZipcode.length > 0 && nextProps.showZipcode != this.state.zipcode ){
-            const { onClear } = this.props;
+            let { coordinates } = this.state;
             this.setState({
-                zipcode: nextProps.showZipcode
+                zipcode: nextProps.showZipcode,
+                zipcodeList: nextProps.zipcodeList
             });
             //const zipJson = fs.readFileSync(`../Map/zipcode-geojson/${nextProps.showZipcode}.json`);
             const url = process.env.PUBLIC_URL + 'zipcode-geojson/' +nextProps.showZipcode + ".json";
             //console.log("zipJson", url);
             axios.get(url).then(resp => {
 
-                const layerId = "zipcode";
-                const sourceId = "zipcodeSrc";
+                const layerId = "zipcode" +nextProps.showZipcode;
+                const sourceId = "zipcodeSrc" + nextProps.showZipcode; 
 
                 if (this.map.getLayer(layerId)) {
                     this.map.removeLayer(layerId);
@@ -137,6 +151,11 @@ class Left extends React.Component {
                 }
 
                 const polygon = resp.data;
+                
+                coordinates[nextProps.showZipcode] = polygon.geometry.coordinates[0];
+                //console.log("polygon", coordinates);
+                const distance = this.calculateDistance(coordinates);
+                //console.log("distance", distance);
 
                 this.map.addSource(sourceId, {
                     'type': 'geojson',
@@ -145,7 +164,9 @@ class Left extends React.Component {
                 var center = turf.center(polygon);
                 //console.log("center", center);
                 this.setState({
-                    polygon: polygon                    
+                    polygon: polygon,
+                    coordinates: coordinates,
+                    distance: distance                   
                 })
                 this.map.flyTo({
                     center: [
@@ -154,6 +175,7 @@ class Left extends React.Component {
                     ],
                     essential: true // this animation is considered essential with respect to prefers-reduced-motion
                 });
+                
                 this.map.addLayer({
                     'id': layerId,
                     'type': 'fill',
@@ -161,9 +183,10 @@ class Left extends React.Component {
                     'layout': {},
                     'paint': {
                     'fill-color': '#de8e10',
-                    'fill-opacity': 0.4
+                    'fill-opacity': 0.2
                     }
                 });
+                
             });
         }
 
@@ -196,16 +219,83 @@ class Left extends React.Component {
             }
             this.marker = markerList;
         }
+        //delete zipcode from list
+        if( nextProps.zipcodeList.length < this.state.zipcodeList.length ){
+            
+            let {zipcodeList, coordinates} = this.state;
+            let deleteZip = ""
+            for(let i=0; i < zipcodeList.length; i++){
+                if(!nextProps.zipcodeList.includes(zipcodeList[i])){
+                    deleteZip = zipcodeList[i];
+                }
+            }
+            const layerId = "zipcode" +deleteZip;
+            const sourceId = "zipcodeSrc" + deleteZip;
+            delete coordinates[deleteZip];
+            const distance = this.calculateDistance(coordinates);
+            if (this.map.getLayer(layerId)) {
+                this.map.removeLayer(layerId);
+            }
+            if (this.map.getSource(sourceId)) {
+                this.map.removeSource(sourceId);
+            }
+            this.setState({
+                zipcodeList: nextProps.zipcodeList,
+                coordinates: coordinates,
+                distance: distance
+            })
+        }
+    }
+
+    calculateDistance(coordinates){
+        let minLat = null;
+        let minLng = null;
+        let maxLat = null;
+        let maxLng = null;
+        let i = 0;
+        for(let zipCode in coordinates){
+            for(let j=0; j < coordinates[zipCode].length; j++){
+            
+                if(i == 0 && j == 0){
+                    minLat = coordinates[zipCode][j][1];
+                    maxLat = coordinates[zipCode][j][1];
+                    minLng = coordinates[zipCode][j][0];
+                    maxLng = coordinates[zipCode][j][0];
+                }
+
+                if( coordinates[zipCode][j][1] < minLat ){
+                    minLat = coordinates[zipCode][j][1];
+                }
+
+                if( coordinates[zipCode][j][0] < minLng ){
+                    minLng = coordinates[zipCode][j][0];
+                }
+                
+                if(coordinates[zipCode][j][1] > maxLat){
+                    maxLat = coordinates[zipCode][j][1];
+                }
+
+                if(coordinates[zipCode][j][0] > maxLng){
+                    maxLng = coordinates[zipCode][j][0];
+                }
+            }
+            i++;
+        }
+        
+        //console.log("minLat", minLat, "minLng", minLng);
+        //console.log("maxLat", maxLat, "maxLng", maxLng);
+        const options = {units: 'kilometers'};
+        return turf.distance([minLng, minLat], [maxLng, maxLat], options);
     }
 
     render() {
-        const { lng, lat, zoom } = this.state;
+        const { lng, lat, zoom, distance } = this.state;
         const { classes } = this.props;
         return (    
             <Grid item xs={9}>
                 <div className={classes.wrapper}>
                     <div className="sidebar">
-                        Longitude: {lng} | Latitude: {lat} | Zoom: {zoom}
+                        Longitude: {lng} | Latitude: {lat} | Zoom: {zoom} | Distance: {distance.toFixed(2)}
                     </div>
                     <div className={classes.mapContainer} ref={this.mapContainer} />
                 </div>

@@ -15,6 +15,11 @@ import TableRow from '@material-ui/core/TableRow';
 import Button from '@material-ui/core/Button';
 import DeleteIcon from '@material-ui/icons/Delete';
 
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
+import ListSubheader from '@material-ui/core/ListSubheader';
+
 
 const useStyles = theme => ({
     form: {
@@ -25,9 +30,24 @@ const useStyles = theme => ({
           top: "10px;"
         },
       },
-      container: {
+    container: {
         maxHeight: 600,
+    },
+    listView: {
+        width: '100%',
+        
+        backgroundColor: theme.palette.background.paper,
+        position: 'relative',
+        overflow: 'auto',
+        maxHeight: 200,
+    },
+    listSection: {
+        backgroundColor: 'inherit',
       },
+    ul: {
+        backgroundColor: 'inherit',
+        padding: 0,
+    },
 });
 
 class Right extends React.Component {
@@ -35,15 +55,21 @@ class Right extends React.Component {
         super(props);
         // make sure the "this" variable keeps its scope
         this.state = {
-            zipcode: "",          
+            lastZipcode: "",
+            zipcodeList: []
         };        
     }
 
     onZipChange = (e) => {
         const {onZipChange} = this.props;
         if( e.target.value && e.target.value.length == 5 ){
+            const {zipcodeList} = this.state;
+            if( !zipcodeList.includes(e.target.value) ){
+                zipcodeList.push(e.target.value);
+            }
             this.setState({
-                zipcode: e.target.value
+                lastZipcode: e.target.value,
+                zipcodeList: zipcodeList
             })
             onZipChange(e);
         }
@@ -52,10 +78,10 @@ class Right extends React.Component {
 
     onCopy = (e) => {
         let textToCopy = "Id\tZipCode\tLat\tLng\n";
-        const { zipcode } = this.state;
+        const { lastZipcode } = this.state;
         const {showLatLngList} = this.props;
         for(let i = 0; i < showLatLngList.length; i++){
-            textToCopy += showLatLngList[i].id + "\t" + zipcode + "\t" + showLatLngList[i].item._lngLat.lat + "\t" + showLatLngList[i].item._lngLat.lng + "\n";
+            textToCopy += showLatLngList[i].id + "\t" + lastZipcode + "\t" + showLatLngList[i].item._lngLat.lat + "\t" + showLatLngList[i].item._lngLat.lng + "\n";
         }
         //console.log("textToCopy", textToCopy);
         //navigator.clipboard.writeText(textToCopy);
@@ -87,38 +113,66 @@ class Right extends React.Component {
     }
 
     onClear = (e) => {
-        this.state = {
-            zipcode: "",          
-        };
+        this.setState ({
+            lastZipcode: "",
+            zipcodeList: [],          
+        });
         const {onClear} = this.props;
         onClear(e);
     }
 
-    onDeleteClick = (e) => {        
-        const {onMarkerDeleteClicked} = this.props;
-        onMarkerDeleteClicked(e.target.innerText);
+    onDeleteLatLngClick = (id) => {        
+        const {onDeleteLatLngClick} = this.props;
+        //console.log("onDeleteLatLngClick", id);
+        onDeleteLatLngClick(id);
+    }
+
+    onDeleteZipCodeClick = (zipcode) => {
+        const {onDeleteZipCodeClick} = this.props;
+        let {zipcodeList} = this.state;
+        //console.log("onDeleteZipCodeClick", zipcode);
+        let newZipcodeList = [];
+        for(let i=0; i < zipcodeList.length; i++){
+            if(zipcodeList[i] != zipcode){
+                newZipcodeList.push(zipcodeList[i]);
+            }
+        }
+        this.setState({
+            zipcodeList: newZipcodeList
+        })
+        onDeleteZipCodeClick(zipcode);
     }
     
 
     render() {
         const { classes } = this.props;
         const {showLatLngList} = this.props;
-        const { zipcode } = this.state;
+        const { lastZipcode, zipcodeList } = this.state;
         
-        let listItems = [];
-
-        
+        let tableListItems = [];        
         for(let i = 0; i < showLatLngList.length; i++){
-            listItems.push(
+            tableListItems.push(
                 <TableRow key={i}>
                     <TableCell align="left">
-                        <Button key={"buttonId" + i} variant="contained" color="secondary" startIcon={<DeleteIcon />} onClick={this.onDeleteClick} >{showLatLngList[i].id}</Button>
+                        <Button key={"buttonId" + i} variant="contained" color="secondary" startIcon={<DeleteIcon />} onClick={() => this.onDeleteLatLngClick(showLatLngList[i].id)} >{showLatLngList[i].id}</Button>
                     </TableCell>
-                    <TableCell align="left">{zipcode}</TableCell>
+                    <TableCell align="left">{lastZipcode}</TableCell>
                     <TableCell align="left">{showLatLngList[i].item._lngLat.lat}</TableCell>
                     <TableCell align="left">{showLatLngList[i].item._lngLat.lng}</TableCell>
                     <TableCell></TableCell>               
                 </TableRow>
+            );
+        }
+
+        let zipItems = [];        
+        for(let i = 0; i < zipcodeList.length; i++){
+            zipItems.push(
+                <ListItem key={i}>
+                        <ListItemText>{zipcodeList[i]}</ListItemText>
+                        <Button key={"zipbuttonId" + i} variant="contained" color="secondary" onClick={ () => this.onDeleteZipCodeClick(zipcodeList[i])} >
+                            <DeleteIcon />
+                        </Button>
+                </ListItem>
             );
         }
         
@@ -141,6 +195,9 @@ class Right extends React.Component {
                         </Grid>                                                
                     </Grid>                      
                 </form>
+                <List className={classes.listView}>                
+                    {zipItems}                
+                </List>
                 <TableContainer  className={classes.container} component={Paper}>
                     <Table stickyHeader aria-label="simple table">
                         <TableHead>
@@ -155,7 +212,7 @@ class Right extends React.Component {
                         </TableRow>
                         </TableHead>
                         <TableBody>                    
-                            {listItems}                    
+                            {tableListItems}                    
                         </TableBody>
                     </Table>
                 </TableContainer>
