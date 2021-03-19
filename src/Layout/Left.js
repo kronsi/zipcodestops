@@ -7,10 +7,11 @@ import MapboxWorker from 'worker-loader!mapbox-gl/dist/mapbox-gl-csp-worker';
 import * as turf from '@turf/turf'
 import React from 'react';
 import axios from "axios";
+import {config} from "../config";
 mapboxgl.workerClass = MapboxWorker;
-mapboxgl.accessToken = 'pk.eyJ1Ijoia3JvbnNpLWdyYXBobWFzdGVycyIsImEiOiJja202cGp0a2QwZWtrMm9tenE5NjA3a2Y1In0.C4gSucoo2-_2tzeUKZeO3A';
+mapboxgl.accessToken = config.mapboxApiKey;
 
- 
+console.log("config", config);
 
 const useStyles = theme => ({
     wrapper: {
