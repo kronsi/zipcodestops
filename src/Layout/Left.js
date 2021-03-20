@@ -11,8 +11,6 @@ import {config} from "../config";
 mapboxgl.workerClass = MapboxWorker;
 mapboxgl.accessToken = config.mapboxApiKey;
 
-console.log("config", config);
-
 const useStyles = theme => ({
     wrapper: {
         height: "100%",        
@@ -38,6 +36,7 @@ class Left extends React.Component {
             polygon: [],
             coordinates: {},
             distance: 0.0,
+            randomMarker: 0
         };
         this.mapContainer = React.createRef();
         this.map = null;
@@ -76,7 +75,7 @@ class Left extends React.Component {
                 const point = turf.point([e.lngLat.lng, e.lngLat.lat]);
                 let isIn = false;
                 for(let zip in coordinates){
-                    var tempFeature = {
+                    const tempFeature = {
                         "type": "Polygon",
                         "coordinates": [coordinates[zip]]
                     };
@@ -97,8 +96,8 @@ class Left extends React.Component {
                     el.innerHTML = '<span><b>' + (markerId) + '</b></span>';
 
                     const marker = new mapboxgl.Marker(el)
-                    .setLngLat([e.lngLat.lng, e.lngLat.lat])                    
-                    .addTo(this.map);                    
+                        .setLngLat([e.lngLat.lng, e.lngLat.lat])
+                        .addTo(this.map);
                     this.marker.push({
                         id: markerId,
                         item: marker
@@ -246,9 +245,83 @@ class Left extends React.Component {
                 distance: distance
             })
         }
+
+        if( nextProps.randomMarker && nextProps.randomMarker != this.state.randomMarker ){
+            if( this.state.zipcode.length == 0 ){
+                alert("zipcode is missing");
+                return;
+            }
+            this.setState({
+                randomMarker: nextProps.randomMarker
+            })
+            for(let i=0; i < nextProps.randomMarker; i++){
+                const {lat, lng} = this.randomPointinPoly();
+                
+                const markerId = (this.marker.length == 0 ? 1 : this.marker[this.marker.length - 1].id +1);
+                // create DOM element for the marker
+                let el = document.createElement('div');
+                el.className = 'marker';
+                el.innerHTML = '<span><b>' + (markerId) + '</b></span>';
+
+                const marker = new mapboxgl.Marker(el)
+                    .setLngLat([lng, lat])
+                    .addTo(this.map);
+                    
+                this.marker.push({
+                    id: markerId,
+                    item: marker
+                });
+                
+                if(this.props.addToLatLngList ){                    
+                    this.props.addToLatLngList(this.marker);                    
+                }
+            }
+            
+        }
+    }
+
+    randomPointinPoly(){
+        const {coordinates} = this.state;
+        
+        const {minLat,maxLat, minLng, maxLng} =this.calculateXandY(coordinates);
+        
+        const lat = minLat + (Math.random() * (maxLat - minLat));
+        const lng = minLng + (Math.random() * (maxLng - minLng));   
+        
+        const point = turf.point([lng, lat]);
+        let isIn = false;
+        for(let zip in coordinates){
+            const tempFeature = {
+                "type": "Polygon",
+                "coordinates": [coordinates[zip]]
+            };
+            
+            let feature = turf.feature(tempFeature)
+            isIn = turf.booleanContains(feature, point);                    
+            if(isIn){
+                break;
+            }
+        }
+
+        if(isIn){
+            return {lat, lng};
+        }
+        else {
+            return this.randomPointinPoly();
+        }
+        
     }
 
     calculateDistance(coordinates){
+        const {minLat,maxLat, minLng, maxLng} =this.calculateXandY(coordinates);
+        
+        //console.log("minLat", minLat, "minLng", minLng);
+        //console.log("maxLat", maxLat, "maxLng", maxLng);
+        const options = {units: 'kilometers'};
+        return turf.distance([minLng, minLat], [maxLng, maxLat], options);
+    }
+
+    calculateXandY(coordinates){
         let minLat = null;
         let minLng = null;
         let maxLat = null;
@@ -282,11 +355,8 @@ class Left extends React.Component {
             }
             i++;
         }
-        
-        //console.log("minLat", minLat, "minLng", minLng);
-        //console.log("maxLat", maxLat, "maxLng", maxLng);
-        const options = {units: 'kilometers'};
-        return turf.distance([minLng, minLat], [maxLng, maxLat], options);
+
+        return {minLat, minLng, maxLat, maxLng};
     }
 
     render() {

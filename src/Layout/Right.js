@@ -19,23 +19,23 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListSubheader from '@material-ui/core/ListSubheader';
+import Box from '@material-ui/core/Box';
 
 
 const useStyles = theme => ({
     form: {
         '& > *': {
           margin: theme.spacing(1),
-          width: '25ch',
+          width: '50ch',
           position: "relative",
           top: "10px;"
         },
-      },
+    },    
     container: {
         maxHeight: 600,
     },
     listView: {
-        width: '100%',
-        
+        width: '100%',        
         backgroundColor: theme.palette.background.paper,
         position: 'relative',
         overflow: 'auto',
@@ -56,7 +56,8 @@ class Right extends React.Component {
         // make sure the "this" variable keeps its scope
         this.state = {
             lastZipcode: "",
-            zipcodeList: []
+            zipcodeList: [],
+            randomCounter: 0
         };        
     }
 
@@ -112,6 +113,12 @@ class Right extends React.Component {
         }
     }
 
+    onRandomChange = (e) => {
+        this.setState({
+            randomCounter: e.target.value
+        })
+    }
+
     onClear = (e) => {
         this.setState ({
             lastZipcode: "",
@@ -119,6 +126,11 @@ class Right extends React.Component {
         });
         const {onClear} = this.props;
         onClear(e);
+    }
+
+    onRandom = (e) => {
+        const {onRandom} = this.props;
+        onRandom(this.state.randomCounter);
     }
 
     onDeleteLatLngClick = (id) => {        
@@ -176,50 +188,69 @@ class Right extends React.Component {
             );
         }
         
-        return (    
-            <Grid item xs={3}>
-                <form className={classes.form} noValidate autoComplete="off">                                                        
-                    <Grid container spacing={3}>                    
-                        <Grid item xs={4}>
-                            <TextField id="standard-basic" label="Standard" onChange={this.onZipChange} />  
+        return (
+            <React.Fragment>
+                <Grid container xs={3}>
+                    <form className={classes.form} noValidate autoComplete="off">
+                        <Grid container spacing={1}>                                                                             
+                            
+                            <Grid item item xs={6}>
+                                <TextField id="standard-basic" label="put zip here" onChange={this.onZipChange} />  
+                            </Grid>
+                            <Grid item item xs={6}>
+                                
+                            </Grid>                                                  
                         </Grid>
-                        <Grid item xs={4}>
-                            <Button variant="contained" onClick={this.onCopy}>
-                                Copy                                                             
-                            </Button> 
-                        </Grid>          
-                        <Grid item xs={4}>
-                            <Button variant="contained" onClick={this.onClear}>
-                                Clear                                
-                            </Button> 
-                        </Grid>                                                
-                    </Grid>                      
-                </form>
-                <List className={classes.listView}>                
-                    {zipItems}                
-                </List>
-                <TableContainer  className={classes.container} component={Paper}>
-                    <Table stickyHeader aria-label="simple table">
-                        <TableHead>
-                        <TableRow>                        
-                            <TableCell width="15px">Id</TableCell>
-                            <TableCell width="15px">Zip</TableCell>
-                            <TableCell align="left">Lat</TableCell>
-                            <TableCell align="left">Lng</TableCell>
-                            <TableCell>
-                                <Badge badgeContent={showLatLngList.length} color="primary"></Badge>
-                            </TableCell>                     
-                        </TableRow>
-                        </TableHead>
-                        <TableBody>                    
-                            {tableListItems}                    
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-                <Grid item xs={12}>
-                    <Badge badgeContent={showLatLngList.length} color="primary"></Badge>
-                </Grid>                            
-            </Grid>  
+                        <Grid container spacing={1}>
+                            <Grid item xs={6}>
+                                <TextField id="standard-basic" label="put random here" onChange={this.onRandomChange} /> 
+                            </Grid>
+                            <Grid item xs={6}>                                
+                                <Button variant="contained" onClick={this.onRandom}>
+                                    Add Random                                                             
+                                </Button>                                                                  
+                            </Grid>
+                        </Grid>
+                        <Grid container spacing={1}>   
+                            
+                            <Grid item xs={6}>
+                                <Button variant="contained" onClick={this.onCopy}>
+                                    Copy                                                             
+                                </Button> 
+                            </Grid>          
+                            <Grid item xs={6}>
+                                <Button variant="contained" onClick={this.onClear}>
+                                    Clear                                
+                                </Button> 
+                            </Grid>    
+                        </Grid>                   
+                    </form>
+                    <List className={classes.listView}>                
+                        {zipItems}                
+                    </List>
+                    <TableContainer  className={classes.container} component={Paper}>
+                        <Table stickyHeader aria-label="simple table">
+                            <TableHead>
+                            <TableRow>                        
+                                <TableCell width="15px">Id</TableCell>
+                                <TableCell width="15px">Zip</TableCell>
+                                <TableCell align="left">Lat</TableCell>
+                                <TableCell align="left">Lng</TableCell>
+                                <TableCell>
+                                    <Badge badgeContent={showLatLngList.length} color="primary"></Badge>
+                                </TableCell>                     
+                            </TableRow>
+                            </TableHead>
+                            <TableBody>                    
+                                {tableListItems}                    
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                    <Grid item xs={12}>
+                        <Badge badgeContent={showLatLngList.length} color="primary"></Badge>
+                    </Grid>                            
+                </Grid> 
+            </React.Fragment> 
         );
     }
 }

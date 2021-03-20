@@ -27,7 +27,8 @@ class Layout extends React.Component {
         this.state = {
             lastZipcode: "",
             zipcodeList: [],
-            markerList: [],           
+            markerList: [], 
+            randomMarker: 0,
         };
         
     }
@@ -64,6 +65,12 @@ class Layout extends React.Component {
         })
     }
 
+    onRandom = (counter) => {
+        this.setState({
+            randomMarker:counter
+        })
+    }
+
     onDeleteLatLngClick = (id) => {
         const {markerList} = this.state;
         let newMarkerList = [];
@@ -96,18 +103,26 @@ class Layout extends React.Component {
 
     render(){
         const { classes } = this.props;
-        const { lastZipcode, markerList, zipcodeList } = this.state;
+        const { lastZipcode, markerList, zipcodeList, randomMarker } = this.state;
         
         return (
             <div className={classes.root}>
                 <Grid className={classes.containerWrapper} container spacing={1}>        
-                    <Left showZipcode={lastZipcode} zipcodeList={zipcodeList} addToLatLngList={this.addToLatLngList} onClear={this.onClear} markerList={markerList} />
+                    <Left 
+                        showZipcode={lastZipcode} 
+                        zipcodeList={zipcodeList} 
+                        addToLatLngList={this.addToLatLngList} 
+                        onClear={this.onClear} 
+                        markerList={markerList}
+                        randomMarker={randomMarker}
+                         />
                     <Right 
                         onZipChange={this.onZipChange} 
                         showLatLngList={markerList} 
                         onClear={this.onClear} 
                         onDeleteLatLngClick={this.onDeleteLatLngClick}  
                         onDeleteZipCodeClick={this.onDeleteZipCodeClick}
+                        onRandom={this.onRandom}
                         />
                 </Grid>    
             </div>
